@@ -11,6 +11,8 @@ import com.alibaba.fastjson.JSONObject;
 public class MonitorLimit implements IGoldMonitor
 {
     private static final String contentFormat = "金价自定义%s限预警！设定值:%.2f，当前：%.2f";
+    private static final String nameFormat = "自定义金价%s限预警";
+    private String name="自定义金价预警";
     private final boolean upThreshold;
     private final float priceThreshold;
 
@@ -21,7 +23,7 @@ public class MonitorLimit implements IGoldMonitor
 
     @Override
     public String getName() {
-        return "金价自定义阈值预警";
+        return name;
     }
 
     @Override
@@ -32,8 +34,8 @@ public class MonitorLimit implements IGoldMonitor
         final Float priceCurrent = Util.getPrice(jsonPriceNew);
 
         if ((upThreshold && priceCurrent >= priceThreshold) || (!upThreshold && priceCurrent <= priceThreshold)) {
-
             final String s = upThreshold ? "上" : "下";
+            name=String.format(nameFormat, s);
             return String.format(contentFormat, s, priceThreshold, priceCurrent);
         }
 

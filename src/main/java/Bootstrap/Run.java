@@ -5,7 +5,7 @@ import FileWatcher.ConfigWatcher;
 import FileWatcher.FileWatcher;
 import Monitor.IGoldMonitor;
 import Notification.INotification;
-import Notification.NotificationWechat;
+import Notification.NotificationDingTalk;
 import Utils.Config;
 import Utils.Util;
 import com.alibaba.fastjson.JSONArray;
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class Run implements Runnable
 {
     private final Context context = new Context();
-    private final INotification notification = new NotificationWechat();
+    private final INotification notification = new NotificationDingTalk();
     private volatile Map<String, IGoldMonitor> monitorMap = new HashMap<>(1);
     private final FileWatcher fileWatcher = new ConfigWatcher(this);
 

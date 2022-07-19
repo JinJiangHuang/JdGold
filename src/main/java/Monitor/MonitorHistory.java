@@ -11,7 +11,8 @@ import com.alibaba.fastjson.JSONObject;
 public class MonitorHistory implements IGoldMonitor
 {
     private static final String contentFormat = "金价达到%d分钟内最%s预警，当前值：%.2f";
-
+    private static final String nameFormat = "金价历史最%s预警";
+    private String name="金价历史预警";
     private final boolean upThreshold;
     private final int monitorIntervalMilliSecond;
 
@@ -23,7 +24,7 @@ public class MonitorHistory implements IGoldMonitor
 
     @Override
     public String getName() {
-        return "金价历史阈值预警";
+        return name;
     }
 
     @Override
@@ -44,6 +45,7 @@ public class MonitorHistory implements IGoldMonitor
         if ((upThreshold && priceCurrent >= priceThreshold) || (!upThreshold && priceCurrent <= priceThreshold)) {
 
             final String s = upThreshold ? "高" : "低";
+            name=String.format(nameFormat, s);
             return String.format(contentFormat, monitorIntervalMilliSecond / 60 / 1000, s, priceCurrent);
         }
 

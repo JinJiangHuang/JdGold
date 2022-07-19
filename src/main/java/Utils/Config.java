@@ -10,7 +10,7 @@ public class Config
     static final String URLLastPrice = "https://ms.jr.jd.com/gw/generic/hj/h5/m/latestPrice";
     static final String URLTodayPrices = "https://ms.jr.jd.com/gw/generic/hj/h5/m/todayPrices";
     public static final String SecretKey = "secretKey";
-    public static final int ThreadTickSecond = 1;
+    public static final int ThreadTickSecond = 10;
     /**
      * 从<code>URLTodayPrices</code>获取价格，一天最多获取的数量
      */

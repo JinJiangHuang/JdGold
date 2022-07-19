@@ -12,10 +12,14 @@ public class MonitorShake implements IGoldMonitor
 {
     private static final String contentFormat = "金价震荡预警！%d秒内%s%.2f元，当前值：%.2f, 前值：%.2f";
 
+    private static final String nameFormat="金价%s预警";
     /**
      *金价震荡阈值
      */
     private final float priceShakeThreshold;
+    
+    private String name="金价预警";
+    
     /**
      * 金价监控周期（秒）
      */
@@ -30,7 +34,7 @@ public class MonitorShake implements IGoldMonitor
 
     @Override
     public String getName() {
-        return "金价震动预警";
+        return name;
     }
 
     @Override
@@ -45,8 +49,8 @@ public class MonitorShake implements IGoldMonitor
         final float priceShake = Math.abs(priceCurrent - priceLast);
 
         if (priceShake >= priceShakeThreshold) {
-
             final String s = priceCurrent > priceLast ? "上升" : "下降";
+            name=String.format(nameFormat, s);
             return String.format(contentFormat, monitorIntervalSecond, s, priceShake, priceCurrent, priceLast);
         }
 
