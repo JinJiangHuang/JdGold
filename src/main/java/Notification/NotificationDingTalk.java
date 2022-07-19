@@ -22,8 +22,8 @@ import com.taobao.api.ApiException;
 import Context.Context;
 
 public class NotificationDingTalk implements INotification {
-	private static String webhook = "https://oapi.dingtalk.com/robot/send?access_token=452b09989912f6626f437c6823c5ac88f5a73cce1a84caab3ed4c576b2e2d888";
-	private static String sercetKey = "SEC0388dbd84ef87ccd8c5a5b8368360756e4eb2a550c9e17129b3ea3af03ba3070";
+	private static String webhook = "https://oapi.dingtalk.com/robot/send?access_token=4xxx";
+	private static String sercetKey = "SExxxx";
 	private static final int NotifyInterval = 173 * 1000;
 	private long lastNotifyTime = 0;
 
