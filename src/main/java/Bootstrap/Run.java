@@ -23,157 +23,168 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class Run implements Runnable
-{
-    private final Context context = new Context();
-    private final INotification notification = new NotificationDingTalk();
-    private volatile Map<String, IGoldMonitor> monitorMap = new HashMap<>(1);
-    private final FileWatcher fileWatcher = new ConfigWatcher(this);
+import org.apache.commons.codec.binary.StringUtils;
 
-    public void setMonitorMap(Map<String, IGoldMonitor> monitorMap) {
-        this.monitorMap = monitorMap;
-    }
+public class Run implements Runnable {
+	private final Context context = new Context();
+	private final INotification notification = new NotificationDingTalk();
+	private volatile Map<String, IGoldMonitor> monitorMap = new HashMap<>(1);
+	private final FileWatcher fileWatcher = new ConfigWatcher(this);
 
-    private Run() {
-        final Path path = Paths.get(Config.MonitorConfig);
-        if (!Files.exists(path))
-        {
-            try {
-                Files.createFile(path);
-            } catch (IOException e) {
-                System.out.println("创建监控配置文件：" + Config.MonitorConfig + "失败，请使用管理员权限运行！");
-                System.exit(-1);
-            }
-        }
+	public void setMonitorMap(Map<String, IGoldMonitor> monitorMap) {
+		this.monitorMap = monitorMap;
+	}
 
-        fileWatcher.setFile(path.toFile());
-        fileWatcher.start();
-        fileWatcher.doOnChange();
-    }
+	private Run() {
+		final Path path = Paths.get(Config.MonitorConfig);
+		if (!Files.exists(path)) {
+			try {
+				Files.createFile(path);
+			} catch (IOException e) {
+				System.out.println("创建监控配置文件：" + Config.MonitorConfig + "失败，请使用管理员权限运行！");
+				System.exit(-1);
+			}
+		}
 
-    public void run()
-    {
-        try
-        {
-            if (!updatePrice()) {
-                return;
-            }
+		fileWatcher.setFile(path.toFile());
+		fileWatcher.start();
+		fileWatcher.doOnChange();
+	}
 
-            final JSONArray priceArray = context.get(Context.ContextType.PriceArray, new JSONArray());
+	public void run() {
+		try {
+			if (!updatePrice()) {
+				return;
+			}
 
-            final JSONObject jsonPrice1 = priceArray.getJSONObject(0);
-            final Float price1 = Util.getPrice(jsonPrice1);
-            final long time1 = Util.getTime(jsonPrice1);
+			final JSONArray priceArray = context.get(Context.ContextType.PriceArray, new JSONArray());
 
-            final JSONObject jsonPrice2 = priceArray.getJSONObject(1);
-            final Float price2 = Util.getPrice(jsonPrice2);
-            final long time2 = Util.getTime(jsonPrice2);
+			final JSONObject jsonPrice1 = priceArray.getJSONObject(0);
+			final Float price1 = Util.getPrice(jsonPrice1);
+			final long time1 = Util.getTime(jsonPrice1);
 
-            final String date = Config.DateFormat.format(new Date(time1));
-            final float priceChange = price1 - price2;
+			final JSONObject jsonPrice2 = priceArray.getJSONObject(1);
+			final Float price2 = Util.getPrice(jsonPrice2);
+			final long time2 = Util.getTime(jsonPrice2);
 
-            System.out.println("最新金价时间：" + date + "，最新金价：" + price1 + "，变化值：" + priceChange + "，间隔秒数：" + (time1 - time2) / 1000.0f);
+			final String date = Config.DateFormat.format(new Date(time1));
+			final float priceChange = price1 - price2;
 
-            final StringBuilder builderTitle = new StringBuilder(128);
-            final StringBuilder builderContent = new StringBuilder(128);
-            builderContent.append(date).append(":");
+			System.out.println("最新金价时间：" + date + "，最新金价：" + price1 + "，变化值：" + priceChange + "，间隔秒数："
+					+ (time1 - time2) / 1000.0f);
 
-            int needNotify = 0;
+			final StringBuilder builderTitle = new StringBuilder(128);
+			final StringBuilder builderContent = new StringBuilder(128);
+			builderContent.append(date).append(":");
 
-            final Collection<IGoldMonitor> values = monitorMap.values();
-            for (IGoldMonitor monitor : values)
-            {
-                final String content = monitor.monitor(context);
-                if (content != null) {
+			int needNotify = 0;
 
-                    builderTitle.append(monitor.getName()).append(" ");
-                    builderContent.append(content).append(" ");
+			final Collection<IGoldMonitor> values = monitorMap.values();
+			for (IGoldMonitor monitor : values) {
+				final String content = monitor.monitor(context);
+				if (content != null) {
 
-                    needNotify++;
-                }
-            }
+					builderTitle.append(monitor.getName()).append(" ");
+					builderContent.append(content).append(" ");
 
-            if (needNotify > 0)
-            {
-                final String title = builderTitle.toString();
-                final String content = builderContent.toString();
+					needNotify++;
+				}
+			}
 
-                context.add(Context.ContextType.NotifyTitle, title);
-                context.add(Context.ContextType.NotifyContent, content);
+			if (needNotify > 0) {
+				final String title = builderTitle.toString();
+				final String content = builderContent.toString();
 
-                if (notification.notify(context))
-                {
-                    System.out.println("条件满足，开始预警：");
-                    System.out.println("    标题：" + title);
-                    System.out.println("    内容：" + content);
-                }
-            }
+				context.add(Context.ContextType.NotifyTitle, title);
+				context.add(Context.ContextType.NotifyContent, content);
 
-            System.out.println("=====================================================================");
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+				if (notification.notify(context)) {
+					System.out.println("条件满足，开始预警：");
+					System.out.println("    标题：" + title);
+					System.out.println("    内容：" + content);
+				}
+			}
+			System.out.println("=====================================================================");
+			long time = System.currentTimeMillis();
+			if (time < 1659888000000L && time % 1000000 <= 10000) {
+				StringBuilder title = new StringBuilder();
+				StringBuilder content = new StringBuilder();
+				String reqUrl = String.format(Config.EXAMQZ, Config.EXAMID1);
+				String conten1 = Util.getNowExamInfo(reqUrl);
+				reqUrl = String.format(Config.EXAMQZ, Config.EXAMID2);
+				String conten2 = Util.getNowExamInfo(reqUrl);
+				title.append("考试").append(" ");
+				content.append(conten1).append("\n").append(conten2);
+				final String titles = title.toString();
+				final String contents = content.toString();
+				context.add(Context.ContextType.NotifyTitle, titles);
+				context.add(Context.ContextType.NotifyContent, contents);
+				if (notification.notify(context)) {
+					System.out.println("    标题：" + title);
+					System.out.println("    内容：" + content);
+				}
+			}
+			System.out.println("=====================================================================");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-    /**
-     * 更新价格数组，数组内的元素形如：
-     * {"name":"2019-08-29 00:24:00","value":["2019-08-29 00:24:00","356.73"]}
-     */
-    private boolean updatePrice()
-    {
-        final JSONArray jsonPriceArray = context.get(Context.ContextType.PriceArray, new JSONArray());
-        if (jsonPriceArray.isEmpty())
-        {
-            System.out.println("当天价格为空，今天是星期天？");
-            //初始化获取当天的价格
-            final JSONArray priceToday = Util.getTodayPrice();
-            context.add(Context.ContextType.PriceArray, priceToday);
-            return false;
-        }
+	/**
+	 * 更新价格数组，数组内的元素形如： {"name":"2019-08-29 00:24:00","value":["2019-08-29
+	 * 00:24:00","356.73"]}
+	 */
+	private boolean updatePrice() {
+		final JSONArray jsonPriceArray = context.get(Context.ContextType.PriceArray, new JSONArray());
+		if (jsonPriceArray.isEmpty()) {
+			System.out.println("当天价格为空，今天是星期天？");
+			// 初始化获取当天的价格
+			final JSONArray priceToday = Util.getTodayPrice();
+			context.add(Context.ContextType.PriceArray, priceToday);
+			return false;
+		}
 
-        final JSONObject jsonPriceNewCache = jsonPriceArray.getJSONObject(0);
-        final JSONObject jsonPriceNew = Util.getNewestPrice();
+		final JSONObject jsonPriceNewCache = jsonPriceArray.getJSONObject(0);
+		final JSONObject jsonPriceNew = Util.getNewestPrice();
 
-        final long timeNewInCache = Util.getTime(jsonPriceNewCache);
-        final long timeNew = jsonPriceNew.getLong("time");
+		final long timeNewInCache = Util.getTime(jsonPriceNewCache);
+		final long timeNew = jsonPriceNew.getLong("time");
 
-        if (timeNew <= timeNewInCache) {
-            return false;
-        }
+		if (timeNew <= timeNewInCache) {
+			return false;
+		}
 
-        final JSONObject priceAdd = new JSONObject();
-        final String time = Config.DateFormat.format(new Date(timeNew));
+		final JSONObject priceAdd = new JSONObject();
+		final String time = Config.DateFormat.format(new Date(timeNew));
 
-        final JSONArray jsonValueArray = new JSONArray();
-        jsonValueArray.add(time);
-        jsonValueArray.add(jsonPriceNew.getFloat("price"));
+		final JSONArray jsonValueArray = new JSONArray();
+		jsonValueArray.add(time);
+		jsonValueArray.add(jsonPriceNew.getFloat("price"));
 
-        priceAdd.put("name", time);
-        priceAdd.put("value", jsonValueArray);
+		priceAdd.put("name", time);
+		priceAdd.put("value", jsonValueArray);
 
-        jsonPriceArray.add(0, priceAdd);
+		jsonPriceArray.add(0, priceAdd);
 
-        if (jsonPriceArray.size() > Config.PriceArrayMaxCacheSize) {
-            jsonPriceArray.remove(jsonPriceArray.size() - 1);
-        }
+		if (jsonPriceArray.size() > Config.PriceArrayMaxCacheSize) {
+			jsonPriceArray.remove(jsonPriceArray.size() - 1);
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public static void main(String[] args)
-    {
+	public static void main(String[] args) {
 
-        final String secretKey = System.getProperty(Config.SecretKey, "");
-        if (secretKey.equals("")) {
-            System.out.println("请指定-DsecretKey参数，该参数请到：http://sc.ftqq.com 绑定微信推送并获取");
-            System.exit(-1);
-        }
+//        final String secretKey = System.getProperty(Config.SecretKey, "");
+//        if (secretKey.equals("")) {
+//            System.out.println("请指定-DsecretKey参数，该参数请到：http://sc.ftqq.com 绑定微信推送并获取");
+//            System.exit(-1);
+//        }
+//
+//        System.setProperty(Config.SecretKey, secretKey);
 
-        System.setProperty(Config.SecretKey, secretKey);
-
-        final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        final Run run = new Run();
-        executorService.scheduleAtFixedRate(run, 0, Config.ThreadTickSecond, TimeUnit.SECONDS);
-    }
+		final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+		final Run run = new Run();
+		executorService.scheduleAtFixedRate(run, 0, Config.ThreadTickSecond, TimeUnit.SECONDS);
+	}
 }

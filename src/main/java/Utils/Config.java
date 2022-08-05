@@ -9,6 +9,9 @@ public class Config
     public static final String MonitorConfig = "monitor.json";
     static final String URLLastPrice = "https://ms.jr.jd.com/gw/generic/hj/h5/m/latestPrice";
     static final String URLTodayPrices = "https://ms.jr.jd.com/gw/generic/hj/h5/m/todayPrices";
+    public static final String EXAMQZ="http://220.160.53.33:8903/ksbm/student/jobCase/applyPostCount?keyword=%s&kjcId=9cbe62650f2611eda6110cda411d478c";
+    public static final  String EXAMID1="14901";
+    public static final  String EXAMID2="17912";
     public static final String SecretKey = "secretKey";
     public static final int ThreadTickSecond = 10;
     /**
